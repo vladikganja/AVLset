@@ -136,7 +136,7 @@ private:
         }
     }
 
-    size_t little_left_rotation(Node<ValT>* current) {
+    void little_left_rotation(Node<ValT>* current) {
         Node<ValT>* a = current;
         Node<ValT>* b = current->right_;
 
@@ -171,11 +171,9 @@ private:
         b->height_ = std::max(get_height(b->left_), get_height(b->right_)) + 1;
         a->subtree_size_ = get_subtree_size(a->left_) + get_subtree_size(a->right_) + 1;
         b->subtree_size_ = get_subtree_size(b->left_) + get_subtree_size(b->right_) + 1;
-
-        return b->height_;
     }
 
-    size_t big_left_rotation(Node<ValT>* current) {
+    void big_left_rotation(Node<ValT>* current) {
         Node<ValT>* a = current;
         Node<ValT>* b = current->right_;
         Node<ValT>* c = current->right_->left_;
@@ -219,11 +217,9 @@ private:
         a->subtree_size_ = get_subtree_size(a->left_) + get_subtree_size(a->right_) + 1;
         b->subtree_size_ = get_subtree_size(b->left_) + get_subtree_size(b->right_) + 1;
         c->subtree_size_ = get_subtree_size(c->left_) + get_subtree_size(c->right_) + 1;
-
-        return c->height_;
     }
 
-    size_t little_right_rotation(Node<ValT>* current) {
+    void little_right_rotation(Node<ValT>* current) {
         Node<ValT>* a = current;
         Node<ValT>* b = current->left_;
 
@@ -258,11 +254,9 @@ private:
         b->height_ = std::max(get_height(b->left_), get_height(b->right_)) + 1;
         a->subtree_size_ = get_subtree_size(a->left_) + get_subtree_size(a->right_) + 1;
         b->subtree_size_ = get_subtree_size(b->left_) + get_subtree_size(b->right_) + 1;
-
-        return b->height_;
     }
 
-    size_t big_right_rotation(Node<ValT>* current) {
+    void big_right_rotation(Node<ValT>* current) {
         Node<ValT>* a = current;
         Node<ValT>* b = current->left_;
         Node<ValT>* c = current->left_->right_;
@@ -306,8 +300,6 @@ private:
         a->subtree_size_ = get_subtree_size(a->left_) + get_subtree_size(a->right_) + 1;
         b->subtree_size_ = get_subtree_size(b->left_) + get_subtree_size(b->right_) + 1;
         c->subtree_size_ = get_subtree_size(c->left_) + get_subtree_size(c->right_) + 1;
-
-        return c->height_;
     }
 
     void subtrees_sizes_change(Node<ValT>* cur, int val) noexcept {
@@ -317,11 +309,9 @@ private:
         }
     }
 
-    void balance(Node<ValT>* cur, size_t height) {
-        cur->height_ = height++;
-        while (cur != root_) {
-            cur = cur->parent_;
-            cur->height_ = std::max(static_cast<size_t>(cur->height_), height++);
+    void balance(Node<ValT>* cur) {
+        while (cur != nullptr) {
+            cur->height_ = std::max(get_height(cur->left_), get_height(cur->right_)) + 1;
 
             size_t left_subtree_height = get_height(cur->left_);
             size_t right_subtree_height = get_height(cur->right_);
@@ -330,22 +320,24 @@ private:
                 size_t sub_subtree_C = get_height(cur->right_->left_);
                 size_t sub_subtree_R = get_height(cur->right_->right_);
                 if (sub_subtree_C <= sub_subtree_R) {
-                    height = little_left_rotation(cur);
+                    little_left_rotation(cur);
                 }
                 else {
-                    height = big_left_rotation(cur);
+                    big_left_rotation(cur);
                 }
             }
             else if (left_subtree_height == right_subtree_height + 2) {
                 size_t sub_subtree_L = get_height(cur->left_->left_);
                 size_t sub_subtree_C = get_height(cur->left_->right_);
                 if (sub_subtree_C <= sub_subtree_L) {
-                    height = little_right_rotation(cur);
+                    little_right_rotation(cur);
                 }
                 else {
-                    height = big_right_rotation(cur);
+                    big_right_rotation(cur);
                 }
             }
+
+            cur = cur->parent_;
         }
     }
 
@@ -442,6 +434,7 @@ public:
                 }
                 else {
                     cur->left_ = new Node<ValT>(cur, nullptr, nullptr, val);
+                    cur->height_++;
                     size_++;
                     break;
                 }
@@ -453,6 +446,7 @@ public:
                 }
                 else {
                     cur->right_ = new Node<ValT>(cur, nullptr, nullptr, val);
+                    cur->height_++;
                     size_++;
                     break;
                 }
@@ -467,7 +461,7 @@ public:
         }
 
         subtrees_sizes_change(cur, 1);
-        balance(cur, 2);
+        balance(cur);
     }
 
     primitive_AVLiterator<ValT> find(const ValT& val) const {
@@ -481,7 +475,7 @@ public:
     void erase(const ValT& val) {
         Node<ValT>* finder = upper_bound(val);
         if (*finder->val_ == val) {
-            Node<ValT>* cur = nullptr;
+            Node<ValT>* cur = finder;
             if (finder->left_ != nullptr) {
                 cur = finder->left_;
                 while (cur->right_ != nullptr) {
@@ -526,7 +520,7 @@ public:
 
             size_--;
             subtrees_sizes_change(cur, -1);
-            balance(cur, std::max(get_height(cur->left_), get_height(cur->right_)) + 1);
+            balance(cur);
         }
     }
 
