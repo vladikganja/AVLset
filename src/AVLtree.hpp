@@ -606,6 +606,10 @@ public:
 
     }
 
+    void beautiful_debug_print() {
+
+    }
+
 };
 
 
